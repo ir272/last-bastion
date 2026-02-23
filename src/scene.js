@@ -38,18 +38,58 @@ export class GameScene {
   _initScene() {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(COLORS.FOG);
+    this._addStarfield();
+  }
+
+  _addStarfield() {
+    // Background stars for atmosphere
+    const starCount = 300;
+    const positions = new Float32Array(starCount * 3);
+    const colors = new Float32Array(starCount * 3);
+    const teal = new THREE.Color(0x00f5d4);
+    const purple = new THREE.Color(0xb388ff);
+    const white = new THREE.Color(0xaabbcc);
+
+    for (let i = 0; i < starCount; i++) {
+      // Distribute on a large sphere around the scene
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI * 0.4; // upper hemisphere
+      const r = 60 + Math.random() * 40;
+      positions[i * 3] = Math.sin(phi) * Math.cos(theta) * r;
+      positions[i * 3 + 1] = Math.cos(phi) * r;
+      positions[i * 3 + 2] = Math.sin(phi) * Math.sin(theta) * r;
+
+      const c = Math.random() < 0.15 ? teal : Math.random() < 0.1 ? purple : white;
+      colors[i * 3] = c.r;
+      colors[i * 3 + 1] = c.g;
+      colors[i * 3 + 2] = c.b;
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const mat = new THREE.PointsMaterial({
+      size: 0.3,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.6,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    this.starfield = new THREE.Points(geo, mat);
+    this.scene.add(this.starfield);
   }
 
   _initCamera() {
     const aspect = window.innerWidth / window.innerHeight;
-    this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 200);
-    // Isometric-ish angle
-    this.camera.position.set(0, 18, 14);
-    this.camera.lookAt(0, 0, 0);
+    this.camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 200);
+    // Isometric-ish angle — higher and pulled back to see whole map
+    this.camera.position.set(2, 22, 16);
+    this.camera.lookAt(2, 0, 2);
 
     // Camera control state
-    this.cameraTarget = new THREE.Vector3(0, 0, 0);
-    this.cameraOffset = new THREE.Vector3(0, 18, 14);
+    this.cameraTarget = new THREE.Vector3(2, 0, 2);
+    this.cameraOffset = new THREE.Vector3(0, 22, 14);
     this.zoomLevel = 1;
     this.minZoom = 0.5;
     this.maxZoom = 2.0;

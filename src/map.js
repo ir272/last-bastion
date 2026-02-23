@@ -88,11 +88,23 @@ export class GameMap {
       emissiveIntensity: 0.6,
     });
 
+    // Path edge border
+    const pathEdgeGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 0.08, 1));
+    const pathEdgeMat = new THREE.LineBasicMaterial({
+      color: COLORS.TEAL,
+      transparent: true,
+      opacity: 0.12,
+    });
+
     PATH_POINTS.forEach(([gx, gz]) => {
       const mesh = new THREE.Mesh(pathGeo, pathMat);
       mesh.position.set(originX + gx + 0.5, 0.04, originZ + gz + 0.5);
       mesh.receiveShadow = true;
       this.scene.add(mesh);
+
+      const edge = new THREE.LineSegments(pathEdgeGeo, pathEdgeMat);
+      edge.position.copy(mesh.position);
+      this.scene.add(edge);
     });
 
     // Build smooth catmull-rom path for enemy navigation
@@ -113,6 +125,26 @@ export class GameMap {
     const edgeGeo = new THREE.BufferGeometry().setFromPoints(this.pathWorldPoints);
     const edgeLine = new THREE.Line(edgeGeo, edgeMat);
     this.scene.add(edgeLine);
+
+    // Spawn portal (glowing ring at entry point)
+    const spawnPos = this.spawnPoint;
+    const portalGeo = new THREE.TorusGeometry(0.6, 0.08, 8, 32);
+    const portalMat = new THREE.MeshStandardMaterial({
+      color: 0xff4488,
+      emissive: 0xff4488,
+      emissiveIntensity: 1.0,
+      transparent: true,
+      opacity: 0.7,
+    });
+    this._spawnPortal = new THREE.Mesh(portalGeo, portalMat);
+    this._spawnPortal.position.set(spawnPos.x, 0.8, spawnPos.z);
+    this._spawnPortal.rotation.x = Math.PI / 2;
+    this.scene.add(this._spawnPortal);
+
+    // Spawn portal light
+    const portalLight = new THREE.PointLight(0xff4488, 1.5, 5);
+    portalLight.position.set(spawnPos.x, 1.2, spawnPos.z);
+    this.scene.add(portalLight);
   }
 
   _buildBuildNodes() {
@@ -299,6 +331,12 @@ export class GameMap {
     // Rune rings rotate slowly
     if (this._runeRing1) this._runeRing1.rotation.z += dt * 0.3;
     if (this._runeRing2) this._runeRing2.rotation.z -= dt * 0.2;
+
+    // Spawn portal pulse
+    if (this._spawnPortal) {
+      this._spawnPortal.rotation.z += dt * 2;
+      this._spawnPortal.material.emissiveIntensity = 0.6 + Math.sin(time * 4) * 0.4;
+    }
 
     // Animate spores (gentle float)
     if (this.sporesMesh) {
