@@ -85,17 +85,44 @@ export class Enemy {
   }
 
   _buildHPBar() {
-    const barGeo = new THREE.PlaneGeometry(0.8, 0.08);
-    const barBgMat = new THREE.MeshBasicMaterial({ color: 0x222222, transparent: true, opacity: 0.6, side: THREE.DoubleSide });
-    this.hpBarBg = new THREE.Mesh(barGeo, barBgMat);
-    this.hpBarBg.position.y = this.scale + 0.4;
-    this.mesh.add(this.hpBarBg);
+    // Use canvas textures for HP bar sprites (auto-billboard)
+    this._hpCanvas = document.createElement('canvas');
+    this._hpCanvas.width = 64;
+    this._hpCanvas.height = 8;
+    this._hpCtx = this._hpCanvas.getContext('2d');
+    this._hpTexture = new THREE.CanvasTexture(this._hpCanvas);
+    this._hpTexture.minFilter = THREE.NearestFilter;
 
-    const barFillMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, side: THREE.DoubleSide });
-    this.hpBarFill = new THREE.Mesh(barGeo.clone(), barFillMat);
-    this.hpBarFill.position.y = this.scale + 0.4;
-    this.hpBarFill.position.z = 0.001;
-    this.mesh.add(this.hpBarFill);
+    const mat = new THREE.SpriteMaterial({
+      map: this._hpTexture,
+      transparent: true,
+      depthTest: false,
+    });
+    this.hpSprite = new THREE.Sprite(mat);
+    this.hpSprite.scale.set(0.8, 0.1, 1);
+    this.hpSprite.position.y = this.scale + 0.5;
+    this.mesh.add(this.hpSprite);
+    this._updateHPBar(1);
+  }
+
+  _updateHPBar(ratio) {
+    const ctx = this._hpCtx;
+    const w = 64, h = 8;
+    ctx.clearRect(0, 0, w, h);
+    // Background
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(0, 0, w, h);
+    // Fill
+    const fillW = Math.max(1, Math.floor(w * ratio));
+    if (ratio > 0.5) ctx.fillStyle = '#00ff88';
+    else if (ratio > 0.25) ctx.fillStyle = '#ffcc00';
+    else ctx.fillStyle = '#ff4444';
+    ctx.fillRect(0, 0, fillW, h);
+    // Border
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0, 0, w, h);
+    this._hpTexture.needsUpdate = true;
   }
 
   addToScene(scene) {
@@ -192,22 +219,9 @@ export class Enemy {
       this.material.emissive.setHex(this.color);
     }
 
-    // Update HP bar
+    // Update HP bar (canvas-based sprite, auto-billboards)
     const hpRatio = this.hp / this.maxHp;
-    this.hpBarFill.scale.x = Math.max(0.01, hpRatio);
-    this.hpBarFill.position.x = -(1 - hpRatio) * 0.4;
-    // Color transitions: green -> yellow -> red
-    if (hpRatio > 0.5) {
-      this.hpBarFill.material.color.setHex(0x00ff88);
-    } else if (hpRatio > 0.25) {
-      this.hpBarFill.material.color.setHex(0xffcc00);
-    } else {
-      this.hpBarFill.material.color.setHex(0xff4444);
-    }
-
-    // HP bar faces camera (billboard)
-    this.hpBarBg.lookAt(this.mesh.position.x, this.mesh.position.y + 10, this.mesh.position.z + 10);
-    this.hpBarFill.lookAt(this.mesh.position.x, this.mesh.position.y + 10, this.mesh.position.z + 10);
+    this._updateHPBar(hpRatio);
   }
 
   // Get progress along path (0-1) for targeting priority

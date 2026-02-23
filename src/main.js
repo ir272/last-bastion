@@ -113,6 +113,8 @@ class Game {
     this.selectedTower = null;
     this.ui.clearTowerSelection();
     this.ui.hideTowerInfo();
+    this._hideGhostTower();
+    document.getElementById('game-canvas').classList.remove('placing');
 
     // Clear enemies
     if (this.waveManager) {
@@ -125,12 +127,19 @@ class Game {
         n.occupied = false;
         n.tower = null;
       });
+      this.map.resetNodeHighlights();
     }
 
     // Reset map state
     if (this.map) {
       this.map.crystalHealth = 1;
     }
+
+    // Reset speed
+    this.gameSpeed = 1;
+
+    // Remove floating gold text elements
+    document.querySelectorAll('.gold-float').forEach((el) => el.remove());
   }
 
   _resume() {
