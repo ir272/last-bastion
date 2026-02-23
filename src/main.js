@@ -175,15 +175,18 @@ class Game {
 
   _selectTowerType(type) {
     this.audioSystem.playButtonClick();
+    const canvas = document.getElementById('game-canvas');
     if (this.selectedTowerType === type) {
       // Deselect
       this.selectedTowerType = null;
       this.ui.clearTowerSelection();
+      canvas.classList.remove('placing');
     } else {
       this.selectedTowerType = type;
       this.selectedTower = null;
       this.ui.selectTowerSlot(type);
       this.ui.hideTowerInfo();
+      canvas.classList.add('placing');
     }
   }
 
@@ -217,6 +220,7 @@ class Game {
     this.ui.clearTowerSelection();
     this.ui.hideTowerInfo();
     this.towers.forEach((t) => t.showRange(false));
+    document.getElementById('game-canvas').classList.remove('placing');
   }
 
   _selectExistingTower(tower) {
@@ -374,6 +378,13 @@ class Game {
     this.waveManager.totalGoldEarned += enemy.reward;
     this.ui.updateGold(this.economy.gold);
     this.ui.updateTowerSlots(this.economy.gold);
+
+    // Floating gold text at enemy's screen position
+    const pos = enemy.position.clone();
+    pos.project(this.gameScene.camera);
+    const screenX = (pos.x * 0.5 + 0.5) * window.innerWidth;
+    const screenY = (-pos.y * 0.5 + 0.5) * window.innerHeight;
+    this.ui.showFloatingGold(enemy.reward, screenX, screenY);
   }
 
   _onEnemyReachEnd(enemy) {
@@ -428,6 +439,9 @@ class Game {
       // UI updates
       this.ui.updateWave(this.waveManager.currentWave, GAME.TOTAL_WAVES);
       this.ui.updateTowerSlots(this.economy.gold);
+      if (this.selectedTower) {
+        this.ui.updateUpgradeAffordability(this.economy.gold, this.selectedTower);
+      }
 
       // Prep phase UI
       if (this.waveManager.state === 'prep') {

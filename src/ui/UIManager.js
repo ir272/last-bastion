@@ -308,6 +308,13 @@ export class UIManager {
     this.el.towerInfo.classList.remove('hidden');
   }
 
+  // Update upgrade button affordability (call each frame when tower info is shown)
+  updateUpgradeAffordability(gold, tower) {
+    if (!tower || tower.level >= 2) return;
+    const cost = tower.getUpgradeCost();
+    this.el.upgradeBtn.disabled = gold < cost;
+  }
+
   hideTowerInfo() {
     this.el.towerInfo.classList.add('hidden');
   }
@@ -326,5 +333,16 @@ export class UIManager {
 
   hideWavePreview() {
     this.el.wavePreview.classList.add('hidden');
+  }
+
+  // Show floating gold text at screen position
+  showFloatingGold(amount, screenX, screenY) {
+    const el = document.createElement('div');
+    el.className = 'gold-float';
+    el.textContent = `+${amount}g`;
+    el.style.left = `${screenX}px`;
+    el.style.top = `${screenY}px`;
+    document.getElementById('game-container').appendChild(el);
+    setTimeout(() => el.remove(), 1000);
   }
 }
