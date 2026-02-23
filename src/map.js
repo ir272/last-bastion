@@ -81,11 +81,11 @@ export class GameMap {
     // Build 3D path meshes (slightly raised, glowing edges)
     const pathGeo = new THREE.BoxGeometry(1, 0.08, 1);
     const pathMat = new THREE.MeshStandardMaterial({
-      color: COLORS.PATH,
-      roughness: 0.7,
+      color: 0x1a1a3a,
+      roughness: 0.6,
       metalness: 0.3,
-      emissive: 0x0a0a1e,
-      emissiveIntensity: 0.3,
+      emissive: 0x0d2a2a,
+      emissiveIntensity: 0.6,
     });
 
     PATH_POINTS.forEach(([gx, gz]) => {
@@ -109,7 +109,7 @@ export class GameMap {
     this.spawnPoint.y = 0.3;
 
     // Glowing edge lines along path
-    const edgeMat = new THREE.LineBasicMaterial({ color: COLORS.TEAL, transparent: true, opacity: 0.15 });
+    const edgeMat = new THREE.LineBasicMaterial({ color: COLORS.TEAL, transparent: true, opacity: 0.35 });
     const edgeGeo = new THREE.BufferGeometry().setFromPoints(this.pathWorldPoints);
     const edgeLine = new THREE.Line(edgeGeo, edgeMat);
     this.scene.add(edgeLine);
@@ -136,22 +136,38 @@ export class GameMap {
       });
     });
 
-    const nodeGeo = new THREE.BoxGeometry(0.9, 0.04, 0.9);
+    const nodeGeo = new THREE.BoxGeometry(0.9, 0.06, 0.9);
     const nodeMat = new THREE.MeshStandardMaterial({
-      color: COLORS.BUILD_NODE,
-      roughness: 0.8,
-      metalness: 0.2,
+      color: 0x151530,
+      roughness: 0.6,
+      metalness: 0.3,
+      emissive: 0x0a1a1a,
+      emissiveIntensity: 0.4,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.7,
+    });
+
+    // Build node border ring for visibility
+    const borderGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(0.92, 0.06, 0.92));
+    const borderMat = new THREE.LineBasicMaterial({
+      color: COLORS.TEAL,
+      transparent: true,
+      opacity: 0.25,
     });
 
     adjacent.forEach((key) => {
       const [gx, gz] = key.split(',').map(Number);
       const mesh = new THREE.Mesh(nodeGeo, nodeMat.clone());
-      mesh.position.set(originX + gx + 0.5, 0.02, originZ + gz + 0.5);
+      mesh.position.set(originX + gx + 0.5, 0.03, originZ + gz + 0.5);
       mesh.receiveShadow = true;
       this.scene.add(mesh);
-      this.buildNodes.push({ gx, gz, mesh, occupied: false, tower: null });
+
+      // Border outline
+      const border = new THREE.LineSegments(borderGeo, borderMat.clone());
+      border.position.copy(mesh.position);
+      this.scene.add(border);
+
+      this.buildNodes.push({ gx, gz, mesh, border, occupied: false, tower: null });
     });
   }
 
@@ -310,9 +326,14 @@ export class GameMap {
   // Highlight build node under cursor
   highlightNode(node, canAfford) {
     if (node && !node.occupied) {
-      node.mesh.material.emissive = new THREE.Color(canAfford ? COLORS.BUILD_HOVER : COLORS.RED);
-      node.mesh.material.emissiveIntensity = 0.5;
-      node.mesh.material.opacity = 0.8;
+      const color = canAfford ? COLORS.BUILD_HOVER : COLORS.RED;
+      node.mesh.material.emissive = new THREE.Color(color);
+      node.mesh.material.emissiveIntensity = 0.8;
+      node.mesh.material.opacity = 0.9;
+      if (node.border) {
+        node.border.material.color.setHex(color);
+        node.border.material.opacity = 0.8;
+      }
     }
   }
 
@@ -320,9 +341,13 @@ export class GameMap {
   resetNodeHighlights() {
     this.buildNodes.forEach((n) => {
       if (!n.occupied) {
-        n.mesh.material.emissive = new THREE.Color(0x000000);
-        n.mesh.material.emissiveIntensity = 0;
-        n.mesh.material.opacity = 0.5;
+        n.mesh.material.emissive = new THREE.Color(0x0a1a1a);
+        n.mesh.material.emissiveIntensity = 0.4;
+        n.mesh.material.opacity = 0.7;
+        if (n.border) {
+          n.border.material.color.setHex(COLORS.TEAL);
+          n.border.material.opacity = 0.25;
+        }
       }
     });
   }

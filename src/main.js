@@ -329,6 +329,16 @@ class Game {
     this.particleSystem.setMaxParticles(q.particles);
   }
 
+  _onWaveAutoStart(waveNum) {
+    // Called when a wave starts from prep timer expiring
+    this.ui.showWaveBanner(waveNum + 1, this.waveManager.getWaveDesc());
+    this.ui.showNextWaveButton(false);
+    this.ui.hideWavePreview();
+    // Apply interest
+    const interest = this.economy.applyInterest();
+    this.ui.updateGold(this.economy.gold);
+  }
+
   _onEnemyDeath(enemy) {
     this.economy.earn(enemy.reward);
     this.waveManager.totalGoldEarned += enemy.reward;
@@ -376,7 +386,8 @@ class Game {
         this.particleSystem,
         this.audioSystem,
         (enemy) => this._onEnemyDeath(enemy),
-        (enemy) => this._onEnemyReachEnd(enemy)
+        (enemy) => this._onEnemyReachEnd(enemy),
+        (waveNum) => this._onWaveAutoStart(waveNum)
       );
 
       // Update towers

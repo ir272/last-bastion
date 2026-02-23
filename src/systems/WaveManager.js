@@ -113,13 +113,14 @@ export class WaveManager {
   }
 
   // Update wave state
-  update(dt, scene, particleSystem, audioSystem, onEnemyDeath, onEnemyReachEnd) {
+  update(dt, scene, particleSystem, audioSystem, onEnemyDeath, onEnemyReachEnd, onWaveStart) {
     switch (this.state) {
       case 'prep':
         this.prepTimer -= dt;
         if (this.prepTimer <= 0) {
           this.startWave(this._path);
           if (audioSystem) audioSystem.playWaveStart();
+          if (onWaveStart) onWaveStart(this.currentWave);
         }
         break;
 
