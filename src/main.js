@@ -234,6 +234,7 @@ class Game {
     if (!this.selectedTowerType) {
       this.map.resetNodeHighlights();
       this.hoveredNode = null;
+      this._hideGhostTower();
       return;
     }
 
@@ -242,6 +243,7 @@ class Game {
     if (!worldPos) {
       this.map.resetNodeHighlights();
       this.hoveredNode = null;
+      this._hideGhostTower();
       return;
     }
 
@@ -250,11 +252,39 @@ class Game {
 
     this.map.resetNodeHighlights();
     this.hoveredNode = null;
+    this._hideGhostTower();
 
     if (node && !node.occupied) {
       const canAfford = this.economy.canBuyTower(this.selectedTowerType);
       this.map.highlightNode(node, canAfford);
       this.hoveredNode = node;
+      if (canAfford) {
+        this._showGhostTower(node, this.selectedTowerType);
+      }
+    }
+  }
+
+  _showGhostTower(node, type) {
+    const def = TOWERS[type];
+    if (!this._ghostMesh) {
+      const geo = new THREE.CylinderGeometry(0.15, 0.25, 1.5, 6);
+      const mat = new THREE.MeshBasicMaterial({
+        color: def.color,
+        transparent: true,
+        opacity: 0.3,
+        wireframe: true,
+      });
+      this._ghostMesh = new THREE.Mesh(geo, mat);
+      this.gameScene.scene.add(this._ghostMesh);
+    }
+    this._ghostMesh.material.color.setHex(def.color);
+    this._ghostMesh.position.set(node.mesh.position.x, 0.75, node.mesh.position.z);
+    this._ghostMesh.visible = true;
+  }
+
+  _hideGhostTower() {
+    if (this._ghostMesh) {
+      this._ghostMesh.visible = false;
     }
   }
 

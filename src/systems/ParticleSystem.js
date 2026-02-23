@@ -37,10 +37,10 @@ export class ParticleSystem {
     this.geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
     this.material = new THREE.PointsMaterial({
-      size: 0.15,
+      size: 0.25,
       vertexColors: true,
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.9,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true,
@@ -69,7 +69,7 @@ export class ParticleSystem {
   }
 
   // Arrow / cannonball projectile trail
-  spawnProjectileTrail(from, to, color, count = 8) {
+  spawnProjectileTrail(from, to, color, count = 14) {
     const dir = new THREE.Vector3().subVectors(to, from);
     const len = dir.length();
     dir.normalize();

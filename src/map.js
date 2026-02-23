@@ -79,13 +79,13 @@ export class GameMap {
     });
 
     // Build 3D path meshes (slightly raised, glowing edges)
-    const pathGeo = new THREE.BoxGeometry(1, 0.08, 1);
+    const pathGeo = new THREE.BoxGeometry(1, 0.1, 1);
     const pathMat = new THREE.MeshStandardMaterial({
-      color: 0x1a1a3a,
-      roughness: 0.6,
-      metalness: 0.3,
-      emissive: 0x0d2a2a,
-      emissiveIntensity: 0.6,
+      color: 0x12122a,
+      roughness: 0.5,
+      metalness: 0.4,
+      emissive: 0x081818,
+      emissiveIntensity: 0.5,
     });
 
     // Path edge border
@@ -168,15 +168,15 @@ export class GameMap {
       });
     });
 
-    const nodeGeo = new THREE.BoxGeometry(0.9, 0.06, 0.9);
+    const nodeGeo = new THREE.BoxGeometry(0.88, 0.05, 0.88);
     const nodeMat = new THREE.MeshStandardMaterial({
-      color: 0x151530,
-      roughness: 0.6,
-      metalness: 0.3,
-      emissive: 0x0a1a1a,
-      emissiveIntensity: 0.4,
+      color: 0x182038,
+      roughness: 0.5,
+      metalness: 0.4,
+      emissive: 0x0c2020,
+      emissiveIntensity: 0.5,
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.75,
     });
 
     // Build node border ring for visibility
